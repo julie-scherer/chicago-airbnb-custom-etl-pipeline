@@ -3,10 +3,10 @@
 
 #### Project description: 
 
-This repository creates a PostgreSQL database from the Inside Airbnb listings data for Chicago, IL (available here)[http://insideairbnb.com/get-the-data/]. The database includes information about the listings, such as the property type, url, amenities, etc., as well as details about the location/neighborhood, host, and reviews from previous guests.
+This repository creates a PostgreSQL database from the Inside Airbnb listings data for Chicago, IL [available here](http://insideairbnb.com/get-the-data/). The database includes information about the listings, such as the property type, url, amenities, etc., as well as details about the location/neighborhood, host, and reviews from previous guests.
 
 #### Data source: 
-The Airbnb listings data for Chicago, IL was obtained from the (Inside Airbnb)[http://insideairbnb.com/chicago] website. The data includes listings that were active as of December 2022.
+The Airbnb listings data for Chicago, IL was obtained from the [Inside Airbnb](http://insideairbnb.com/chicago) website. The data includes listings that were active as of December 2022.
 
 
 #### Database design: 
