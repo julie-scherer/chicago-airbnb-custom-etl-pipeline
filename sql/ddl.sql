@@ -1,15 +1,9 @@
-CREATE DATABASE temp;
--- check running databases
-SELECT * FROM pg_stat_activity WHERE datname = 'airbnb';
--- terminal active database
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'airbnb';
--- drop the database
-DROP DATABASE IF EXISTS airbnb;
--- create airbnb database
-CREATE DATABASE airbnb;
+-- DROP DATABASE IF EXISTS airbnb; -- drop the airbnb database if it exists
+-- CREATE DATABASE airbnb; -- create the airbnb database
+-- DROP DATABASE IF EXISTS postgres; -- drop the postgres database if it exists
 
 
-SHOW DATA_DIRECTORY;
+\c airbnb
 
 
 -- @block create location table
