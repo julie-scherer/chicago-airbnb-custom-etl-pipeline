@@ -1,6 +1,6 @@
 .ipynb_checkpoints
 .vscode
 .DS_Store
-listings.csv
+# listings.csv
 venv
 _*
