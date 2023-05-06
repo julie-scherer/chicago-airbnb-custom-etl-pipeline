@@ -12,7 +12,7 @@ fi
 
 export DOCKER_CONTAINER="${DOCKER_CONTAINER}"
 export DOCKER_IMAGE="${DOCKER_IMAGE}"
-export PG_DATABASE="${PG_DATABASE}"
+export POSTGRES_DB="${POSTGRES_DB}"
 export POSTGRES_USER="${POSTGRES_USER}"
 export POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
 export HOST_PORT="${HOST_PORT}"
@@ -21,7 +21,7 @@ export CONTAINER_PORT="${CONTAINER_PORT}"
 echo "$DOCKER_CONTAINER"
 echo "$DOCKER_IMAGE"
 
-echo "$PG_DATABASE"
+echo "$POSTGRES_DB"
 echo "$POSTGRES_USER"
 echo "$POSTGRES_PASSWORD"
 
@@ -33,7 +33,7 @@ docker build -t "$DOCKER_IMAGE" . --build-arg CONTAINER_PORT="$CONTAINER_PORT"
 
 docker run --name "$DOCKER_CONTAINER" \
     -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-    -e POSTGRES_DB="$PG_DATABASE" \
+    -e POSTGRES_DB="$POSTGRES_DB" \
     -d -p "$HOST_PORT:$CONTAINER_PORT" \
     "$DOCKER_IMAGE" 
 
@@ -50,7 +50,7 @@ echo "Checking connection... $(sleep 1 && docker exec -it $DOCKER_CONTAINER pg_i
 
 # (optional) now that the container is running, execute the psql command inside the container
 docker exec -it $DOCKER_CONTAINER \
-    psql -U $POSTGRES_USER -d $PG_DATABASE
+    psql -U $POSTGRES_USER -d $POSTGRES_DB
 
 
 # chmod +x scripts/run-docker.sh

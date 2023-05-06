@@ -13,11 +13,11 @@ fi
 # echo global variables in terminal
 echo "DOCKER_CONTAINER_NAME=${DOCKER_CONTAINER_NAME}"
 echo "POSTGRES_USER=${POSTGRES_USER}"
-echo "PG_DATABASE=${PG_DATABASE}"
+echo "POSTGRES_DB=${POSTGRES_DB}"
 
 # run the psql command
 psql \
     -v ON_ERROR_STOP=1 \
     -U "${POSTGRES_USER}" \
-    -d "${PG_DATABASE}" \
+    -d "${POSTGRES_DB}" \
     -f /docker-entrypoint-initdb.d/ddl.sql
