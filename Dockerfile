@@ -8,11 +8,16 @@ ARG CONTAINER_PORT=${CONTAINER_PORT}
 
 COPY data/listings.csv /docker-entrypoint-initdb.d/listings.csv
 COPY sql/ddl.sql /docker-entrypoint-initdb.d/ddl.sql
+COPY pipeline/csv-to-postgres.py /docker-entrypoint-initdb.d/
 
+COPY scripts/init-db.sh /docker-entrypoint-initdb.d/
 
-COPY example.env /docker-entrypoint-initdb.d/
-COPY scripts/run-postgres.sh /docker-entrypoint-initdb.d/
-RUN chmod +x /docker-entrypoint-initdb.d/run-postgres.sh
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    pip3 install --no-cache-dir pandas sqlalchemy psycopg2-binary
+
+RUN chmod +x /docker-entrypoint-initdb.d/csv-to-postgres.py
+RUN chmod +x /docker-entrypoint-initdb.d/init-db.sh
 
 CMD ["postgres"]
 

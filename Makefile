@@ -2,8 +2,8 @@ include example.env
 
 .PHONY: up
 up:
-	chmod +x scripts/run-docker.sh
-	./scripts/run-docker.sh
+	chmod +x scripts/deploy-docker-pipeline.sh
+	./scripts/deploy-docker-pipeline.sh
 
 .PHONY: down
 down:

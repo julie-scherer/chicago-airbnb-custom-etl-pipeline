@@ -3,22 +3,18 @@
 
 ## Project description
 
-This repository creates a PostgreSQL database from the Inside Airbnb listings data for Chicago, IL [available here](http://insideairbnb.com/get-the-data/). The database includes information about the listings, such as the property type, url, amenities, etc., as well as details about the location/neighborhood, host, and reviews from previous guests.
+This project creates and deploys a PostgreSQL database in Docker, processes Airbnb listings data from Chicago, IL (data source: [Inside Airbnb](http://insideairbnb.com/chicago)), and then loads the transformed data into the Postgres database running in Docker.
 
-&rarr; Note that this repository is currently under development. The database has been configured to run in Docker and the necessary tables have been created. However, the data has not been inserted yet. Updates coming soon :smile:
+TL;DR The database definition script `sql/ddl.sql` and the data insertion script `csv-to-postgres.py` are automatically executed when the `deploy-docker-pipeline.sh` script is run.
 
-**Data source:**
+The resulting database includes information about the listings, such as the property type, url, amenities, etc., as well as details about the location/neighborhood, host, and reviews from previous guests.
 
-The Airbnb listings data for Chicago, IL was obtained from the [Inside Airbnb](http://insideairbnb.com/chicago) website. The data includes listings that were active as of December 2022.
+**Database schemas**
 
-**Database design**
-
-The database has been designed with the following tables:
-
-- listings: contains information about the Airbnb listings, such as the property type, room type, minimum and maximum nights, bedrooms, price, etc.
-- location: contains information about the location, including the Chicago neighborhood, latitude, longitude, and neighborhood overview.
-- hosts: contains information about the hosts, such as their name and the number of listings they have.
-- reviews: contains information about the reviews left by previous guests, such as the number of reviews, date, text of the review, etc.
+- **listings**: contains information about the Airbnb listings, such as the property type, room type, minimum and maximum nights, bedrooms, price, etc.
+- **locations**: contains information about the location, including the Chicago neighborhood, latitude, longitude, and neighborhood overview.
+- **hosts**: contains information about the hosts, such as their name and the number of listings they have.
+- **reviews**: contains information about the reviews left by previous guests, such as the number of reviews, date, text of the review, etc.
 
 The tables are linked together using foreign keys to allow for efficient queries and data retrieval.
 
@@ -33,21 +29,19 @@ The instructions below assume you have an `.env` file in the root directory with
 
 ### :pencil: Instructions
 
-1. Start the Docker daemon, open a terminal window, and navigate to the root directory of the forked repository
-
-2. Run the following commands to make the script file executable and run the script:
+1. To run the pipeline, ensure that Docker is installed and running on your machine, and then navigate to the root directory of the project in the terminal and run the following command:
     
     ```
-    chmod +x scripts/run-docker.sh
-	./scripts/run-docker.sh
+    chmod +x scripts/deploy-docker-pipeline.sh
+    ./scripts/deploy-docker-pipeline.sh
 
     # or, run this command if you have Make:
     # make up
     ```
 
-    &rarr; The `run-docker.sh` script will build a Docker image using the Postgres image on [Docker Hub](https://hub.docker.com/_/postgres), start a new container from the image, and output the IP address and port number of the container. You can then use the IP address and port number to connect to the Postgres database in the container.
+    The `deploy-docker-pipeline.sh` script will build the `chicago-airbnb-pgimage` Docker image using the Postgres image on [Docker Hub](https://hub.docker.com/_/postgres), start the `chicago-airbnb-pgcontainer` Docker container, and output the IP address and port of the container, which you can use to connect to the database. The bash script creates four tables - `hosts`, `listings`, `locations`, and `reviews` tables - in the `airbnb` database and then runs the `csv-to-postgres.py` script to insert the csv data into the Postgres database.
 
-    &rarr; This will create the `host`, `listing`, `location`, and `reviews` tables in the Postgres database, which I named `airbnb` in the example.env file but you are welcome to change.
+2. Once the pipeline has finished running, you should be able to connect to the PostgreSQL database using your preferred client and view the data in the tables.
 
 3. When you are finished with the Postgres container, you can clean up Docker with the following commands:
 
@@ -69,7 +63,7 @@ To connect a database client to the Postgres instance running in Docker, you can
 
 2. In the "Connection Settings" window, set the following properties:
 
-    * **Host**: The IP address of the Docker container running the PostgreSQL instance. You can find this printed in the terminal from when you ran the `run-docker.sh` script. It will most likely be `0.0.0.0` or `localhost`.
+    * **Host**: The IP address of the Docker container running the PostgreSQL instance. This should be the same as the `$POSTGRES_HOST` variable in your `.env` or `example.env` file. Default port is `localhost` or `0.0.0.0`.
 
     * **Port**: The port that you exposed when you started the container. This should be the same as the `$CONTAINER_PORT` variable in your `.env` or `example.env` file. Default port is `5431:5432`.
 

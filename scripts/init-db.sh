@@ -4,11 +4,10 @@
 set -e
 
 # get the contents of the .env or example.env file into the script
-if [ -f .env ]; then
-  . .env
-else
-  . example.env
+if [ ! -f .env ]; then
+    cp example.env .env
 fi
+set -a; . .env; set +a
 
 # echo global variables in terminal
 echo "DOCKER_CONTAINER_NAME=${DOCKER_CONTAINER_NAME}"
@@ -21,3 +20,4 @@ psql \
     -U "${POSTGRES_USER}" \
     -d "${POSTGRES_DB}" \
     -f /docker-entrypoint-initdb.d/ddl.sql
+

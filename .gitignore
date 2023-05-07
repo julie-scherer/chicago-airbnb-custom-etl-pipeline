@@ -4,3 +4,4 @@
 # listings.csv
 venv
 _*
+.env

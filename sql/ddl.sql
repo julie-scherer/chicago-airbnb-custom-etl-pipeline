@@ -1,14 +1,15 @@
--- DROP DATABASE IF EXISTS airbnb; -- drop the airbnb database if it exists
--- CREATE DATABASE airbnb; -- create the airbnb database
--- DROP DATABASE IF EXISTS postgres; -- drop the postgres database if it exists
+\c postgres
+DROP DATABASE IF EXISTS airbnb; -- drop the airbnb database if it exists
+CREATE DATABASE airbnb; -- create the airbnb database
 
 
 \c airbnb
+DROP DATABASE IF EXISTS postgres; -- drop the postgres database if it exists
 
 
 -- @block create location table
-DROP TABLE IF EXISTS location;
-CREATE TABLE IF NOT EXISTS location (
+DROP TABLE IF EXISTS locations;
+CREATE TABLE IF NOT EXISTS locations (
     id SERIAL PRIMARY KEY
     ,neighborhood VARCHAR -- note neighbourhood in csv
     ,latitude NUMERIC(6,4)
@@ -18,8 +19,8 @@ CREATE TABLE IF NOT EXISTS location (
 
 
 -- @block create host table
-DROP TABLE IF EXISTS host;
-CREATE TABLE IF NOT EXISTS host (
+DROP TABLE IF EXISTS hosts;
+CREATE TABLE IF NOT EXISTS hosts (
     id SERIAL PRIMARY KEY
     ,host_id INT
     ,url VARCHAR
@@ -27,7 +28,6 @@ CREATE TABLE IF NOT EXISTS host (
     ,since DATE
     ,location VARCHAR
     ,about TEXT
-    -- ,response_time VARCHAR
     ,response_rate INT CHECK (response_rate <= 100)
     ,acceptance_rate INT CHECK (acceptance_rate <= 100)
     ,is_superhost BOOLEAN
@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS reviews (
 
 
 -- @block create listing table
-DROP TABLE IF EXISTS listing;
-CREATE TABLE IF NOT EXISTS listing (
+DROP TABLE IF EXISTS listings;
+CREATE TABLE IF NOT EXISTS listings (
     id SERIAL PRIMARY KEY
     ,listing_url VARCHAR
     ,name VARCHAR
@@ -83,9 +83,9 @@ CREATE TABLE IF NOT EXISTS listing (
 
 
 -- @block define relationships
-ALTER TABLE listing
+ALTER TABLE listings
     ADD CONSTRAINT fk_host_id FOREIGN KEY (host_id) REFERENCES host(id);
-ALTER TABLE listing    
+ALTER TABLE listings   
     ADD CONSTRAINT fk_location_id FOREIGN KEY (location_id) REFERENCES location(id);
-ALTER TABLE listing    
+ALTER TABLE listings
     ADD CONSTRAINT fk_reviews_id FOREIGN KEY (reviews_id) REFERENCES reviews(id);

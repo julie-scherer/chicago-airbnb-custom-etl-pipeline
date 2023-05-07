@@ -4,18 +4,15 @@
 set -e
 
 # get the contents of the .env or example.env file into the script
-if [ -f .env ]; then
-    . "$PWD/.env"
-else
-    . "$PWD/example.env"
+# get the contents of the .env or example.env file into the script
+if [ ! -f .env ]; then
+    cp example.env .env
 fi
+set -a; . .env; set +a
 
-export DOCKER_CONTAINER="${DOCKER_CONTAINER}"
-export DOCKER_IMAGE="${DOCKER_IMAGE}"
-
-docker stop $DOCKER_CONTAINER \
-&& docker rm $DOCKER_CONTAINER \
-&& docker rmi $DOCKER_IMAGE
+docker stop $DOCKER_CONTAINER
+docker rm $DOCKER_CONTAINER
+docker rmi $DOCKER_IMAGE
 
 
 # optional, delete all images
