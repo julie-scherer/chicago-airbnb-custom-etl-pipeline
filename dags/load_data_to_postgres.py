@@ -3,8 +3,26 @@ import re
 import pandas as pd 
 from sqlalchemy import create_engine
 
-csv_path = "/docker-entrypoint-initdb.d/listings.csv"
-sql_path = "/docker-entrypoint-initdb.d/ddl.sql"
+from airflow import DAG
+from airflow.operators.postgres_operator import PostgresOperator
+from airflow.operators.python_operator import PythonOperator
+from datetime import datetime, timedelta
+
+default_args = { 
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2023, 5, 5), 
+    'retries': 2,
+    'retry_delay': timedelta(seconds=30)
+
+}
+
+dag = DAG('load_csv_to_postgres', default_args=default_args, schedule_interval='@once')
+
+
+csv_path = "/opt/airflow/data/listings.csv"
+sql_path = "/opt/airflow/data/ddl.sql"
+
 
 def locations_table(df):
     location=df.loc[:,[
@@ -17,7 +35,6 @@ def locations_table(df):
         'neighbourhood' : 'neighborhood'
     }, inplace=True)
     return location
-
 
 def hosts_table(df):
     host=df.loc[:,[
@@ -78,7 +95,6 @@ def hosts_table(df):
 
     return host
 
-
 def reviews_table(df):
     reviews=df.loc[:,[
         'number_of_reviews',
@@ -100,7 +116,6 @@ def reviews_table(df):
                 col : new
             }, inplace=True)
     return reviews
-
 
 def listings_table(df):
     listing=df.loc[:,[
@@ -130,8 +145,6 @@ def listings_table(df):
     return listing
 
 
-
-
 def load_data_to_postgres(): 
     # Read CSV file into a pandas DataFrame 
     df = pd.read_csv(csv_path)
@@ -143,14 +156,14 @@ def load_data_to_postgres():
     listings = listings_table(df)
 
     # Define database connection settings 
-    pg_user=os.environ.get("POSTGRES_USER")
-    pg_password=os.environ.get("POSTGRES_PASSWORD")
-    pg_host=os.environ.get("POSTGRES_HOST")
-    pg_port=os.environ.get("CONTAINER_PORT")
-    db_name=os.environ.get("POSTGRES_DB")
+    POSTGRES_USER=os.environ.get("POSTGRES_USER")
+    POSTGRES_PASSWORD=os.environ.get("POSTGRES_PASSWORD")
+    POSTGRES_HOST=os.environ.get("POSTGRES_HOST")
+    POSTGRES_PORT=os.environ.get("POSTGRES_PORT")
+    POSTGRES_DB=os.environ.get("POSTGRES_DB")
     
     # Create SQLAlchemy engine to connect to the PostgreSQL database 
-    engine = create_engine(f'postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{db_name}')
+    engine = create_engine(f'postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}')
 
     # Write DataFrame to a PostgreSQL table using the SQLAlchemy engine
     locations.to_sql(name='locations', con=engine, if_exists='replace', index=False)
@@ -159,5 +172,86 @@ def load_data_to_postgres():
     listings.to_sql(name='listings', con=engine, if_exists='replace',index=False)
 
 
-if __name__ == '__main__':
-    load_data_to_postgres()
+
+
+# ** Using PostgresOperator **
+create_table = PostgresOperator(
+    task_id='create_tables',
+    postgres_conn_id='postgres_connection',
+    sql="""
+    CREATE TABLE IF NOT EXISTS location (
+        id SERIAL PRIMARY KEY
+        ,neighborhood VARCHAR
+        ,latitude NUMERIC(6,4)
+        ,longitude NUMERIC(6,4)
+        ,neighborhood_overview TEXT   
+    );
+    CREATE TABLE IF NOT EXISTS host (
+        id SERIAL PRIMARY KEY
+        ,host_id INT
+        ,url VARCHAR
+        ,name VARCHAR
+        ,since DATE
+        ,location VARCHAR
+        ,about TEXT
+        ,response_rate INT CHECK (response_rate <= 100)
+        ,acceptance_rate INT CHECK (acceptance_rate <= 100)
+        ,is_superhost BOOLEAN
+        ,neighborhood VARCHAR
+        ,listings_count INT
+        ,total_listings_count INT
+        ,email_verified BOOLEAN
+        ,phone_verified BOOLEAN
+        ,has_profile_pic BOOLEAN
+        ,identity_verified BOOLEAN
+    );
+    CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY
+        ,number_of_reviews INT
+        ,first_review DATE
+        ,last_review DATE
+        ,reviews_per_month NUMERIC(4,2)
+        ,rating_score NUMERIC(4,2)
+        ,accuracy_score NUMERIC(4,2)
+        ,cleanliness_score NUMERIC(4,2)
+        ,checkin_score NUMERIC(4,2)
+        ,communication_score NUMERIC(4,2)
+        ,location_score NUMERIC(4,2)
+        ,value_score NUMERIC(4,2)
+    );
+    CREATE TABLE IF NOT EXISTS listing (
+        id SERIAL PRIMARY KEY
+        ,listing_url VARCHAR
+        ,name VARCHAR
+        ,description TEXT
+        ,property_type VARCHAR
+        ,room_type VARCHAR
+        ,accommodates INT
+        ,bathrooms_text VARCHAR
+        ,bedrooms NUMERIC(3,1)
+        ,beds NUMERIC(3,1)
+        ,amenities TEXT
+        ,price NUMERIC(6,1)
+        ,minimum_nights INT
+        ,maximum_nights INT
+        ,host_id INT
+        ,location_id INT
+        ,reviews_id INT
+    );
+    """,
+    dag=dag,
+)
+
+
+# ** Using PythonOperator **
+insert_data = PythonOperator(
+    task_id='load_data',
+    python_callable=load_data_to_postgres,
+    dag=dag,
+)
+
+
+create_table >> insert_data
+
+# if __name__ == '__main__':
+#     load_data_to_postgres()

@@ -1,11 +1,21 @@
-include example.env
+PROJECT_NAME=chicago-airbnb-database
 
-.PHONY: up
+include .env
+
 up:
-	chmod +x scripts/deploy-docker-pipeline.sh
-	./scripts/deploy-docker-pipeline.sh
+	@if [ ! -f .env ]; then cp example.env .env ; fi
+	docker-compose up --remove-orphans --build -d
 
-.PHONY: down
 down:
-	chmod +x scripts/close-docker.sh
-	./scripts/close-docker.sh
+	docker-compose down --volumes --rmi all
+
+clean:
+	docker rm -vf ${DOCKER_CONTAINER}
+	docker rmi -f ${DOCKER_IMAGE}
+
+logs: 
+	docker-compose logs -f
+
+psql:
+	docker exec -it ${PROJECT_NAME}-postgres-1 \
+    	psql -U ${POSTGRES_USER} -d ${POSTGRES_DB}

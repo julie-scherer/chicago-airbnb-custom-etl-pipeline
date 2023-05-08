@@ -1,24 +1,15 @@
-FROM postgres:latest
+ARG AIRFLOW_VERSION=${AIRFLOW_VERSION:-2.5.2}
 
-ARG CONTAINER_PORT=${CONTAINER_PORT}
+FROM apache/airflow:$AIRFLOW_VERSION
 
-# The /docker-entrypoint-initdb.d/ directory is used by the official
-# Postgres Docker image as a location for scripts and data files
-# that need to be executed or loaded during database initialization.
+ENV AIRFLOW_USER=${AIRFLOW_USER:-airflow}
+ENV AIRFLOW_PASSWORD=${AIRFLOW_PASSWORD:-airflow}
+ENV AIRFLOW_USER_HOME=${AIRFLOW_HOME:-/opt/airflow}
+ENV AIRFLOW_UID=${AIRFLOW_UID:-50000}
 
-COPY data/listings.csv /docker-entrypoint-initdb.d/listings.csv
-COPY sql/ddl.sql /docker-entrypoint-initdb.d/ddl.sql
-COPY pipeline/csv-to-postgres.py /docker-entrypoint-initdb.d/
+USER airflow
+WORKDIR ${AIRFLOW_USER_HOME}
 
-COPY scripts/init-db.sh /docker-entrypoint-initdb.d/
-
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    pip3 install --no-cache-dir pandas sqlalchemy psycopg2-binary
-
-RUN chmod +x /docker-entrypoint-initdb.d/csv-to-postgres.py
-RUN chmod +x /docker-entrypoint-initdb.d/init-db.sh
-
-CMD ["postgres"]
-
-EXPOSE $CONTAINER_PORT
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir pandas sqlalchemy psycopg2-binary
+    # && pip install --no-cache-dir <package_you_want_to_install>
